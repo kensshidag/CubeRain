@@ -9,8 +9,6 @@ public class Spawner : MonoBehaviour
     [SerializeField] private int _poolDefaultCapacity = 5;
     [SerializeField] private int _poolMaxSize = 5;
     [SerializeField] private float _spawnRate = 1.0f;
-    [SerializeField] private float _minTime = 2f;
-    [SerializeField] private float _maxTime = 5f;
 
     private ObjectPool<Cube> _pool;
 
@@ -18,17 +16,17 @@ public class Spawner : MonoBehaviour
     {
         _pool = new ObjectPool<Cube>(
             createFunc: () => Instantiate(_cube),
-            actionOnGet: (cube) => ActionOnGet(cube),
+            actionOnGet: (cube) => SetParameters(cube),
             actionOnRelease: (cube) => cube.gameObject.SetActive(false),
             actionOnDestroy: (cube) => DestroyCube(cube),
             collectionCheck: true,
             defaultCapacity: _poolDefaultCapacity,
             maxSize: _poolMaxSize);
     }
-
+    
     private void Start()
     {
-       InvokeRepeating(nameof(SpawnCube), 0.0f, _spawnRate); 
+        StartCoroutine(TwoSecondTimer());
     }
 
     private void SpawnCube()
@@ -36,17 +34,18 @@ public class Spawner : MonoBehaviour
         _pool.Get();
     }
 
-    private void ActionOnGet(Cube cube)
+    private void SetParameters(Cube cube)
     {
         cube.gameObject.SetActive(true);
         cube.transform.position = GetRandomPosition();
-        cube.GetComponent<Rigidbody>().velocity = Vector3.zero;
-        cube.touched += CourutineHandler;
+        cube.ResetVelocity();
+        cube.Touched += ReturnCubeToPool;
     }
     
-    private void CourutineHandler(Cube cube)
+    private void ReturnCubeToPool(Cube cube)
     {
-        StartCoroutine(WaitForSeconds(cube));
+        cube.Touched -= ReturnCubeToPool;
+        _pool.Release(cube);
     }
 
     private void DestroyCube(Cube cube)
@@ -71,10 +70,12 @@ public class Spawner : MonoBehaviour
         return position;
     }
 
-    private IEnumerator WaitForSeconds(Cube cube)
+    private IEnumerator TwoSecondTimer()
     {
-        yield return new WaitForSeconds(UnityEngine.Random.Range(_minTime, _maxTime));
-        cube.touched -= CourutineHandler;
-        _pool.Release(cube);
+        while (true)
+        {
+            yield return new WaitForSeconds(_spawnRate);
+            SpawnCube();
+        }
     }
 }

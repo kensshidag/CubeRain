@@ -171,9 +171,7 @@ MonoBehaviour:
   _platformCollider: {fileID: 2065035654}
   _poolDefaultCapacity: 5
   _poolMaxSize: 5
-  _spawnRate: 1
-  _minTime: 2
-  _maxTime: 5
+  _spawnRate: 2
 --- !u!1 &340709476
 GameObject:
   m_ObjectHideFlags: 0

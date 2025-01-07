@@ -1,19 +1,24 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody), typeof(Renderer))]
 public class Cube : MonoBehaviour
 {
-    [SerializeField] private Material _defaultMaterial; 
-
-    public event Action<Cube> touched;
+    [SerializeField] private Material _defaultMaterial;
+    [SerializeField] private float _minTime = 2f;
+    [SerializeField] private float _maxTime = 5f;
 
     private Renderer _renderer;
+    private Rigidbody _rigidbody;
     private bool _isTouchet;
+
+    public event Action<Cube> Touched;
 
     private void Awake()
     {
         _renderer = GetComponent<Renderer>();
+        _rigidbody = GetComponent<Rigidbody>();
     }
 
     private void OnEnable()
@@ -34,8 +39,21 @@ public class Cube : MonoBehaviour
         {
             _isTouchet = true;
             _renderer.material.color = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
-            touched?.Invoke(this);
+            StartCoroutine(WaitForSeconds());
         }
     }
 
+    public void ResetVelocity()
+    {
+        if (_rigidbody.velocity != Vector3.zero)
+        {
+            _rigidbody.velocity = Vector3.zero;
+        }
+    }
+
+    private IEnumerator WaitForSeconds()
+    {
+        yield return new WaitForSeconds(UnityEngine.Random.Range(_minTime, _maxTime));
+        Touched?.Invoke(this);
+    }
 }
